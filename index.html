@@ -1,0 +1,722 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#16202a">
+<title>ING-4 Photo Log</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: one shell, two modes — a single-column capture form sized for a 4–6" scanner screen, and a wide desk log (filters → KPIs → evidence list → detail drawer). */
+:root{
+  --bg:#f2f4f6; --surface:#ffffff; --sunk:#e6eaee; --line:#cdd4db;
+  --ink:#16202a; --muted:#5a6773; --accent:#e0a100; --accent-ink:#1b1400;
+  --blue:#1f5f99; --ok:#1e7a46; --warn:#b4560b; --bad:#b3261e;
+  --display:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
+  --body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f151b; --surface:#17202a; --sunk:#1f2a35; --line:#2e3b48;
+  --ink:#e6ebf0; --muted:#97a4b1; --accent:#f2b630; --accent-ink:#1b1400;
+  --blue:#6aa8e0; --ok:#4cc382; --warn:#f0954a; --bad:#ff8a80; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f151b; --surface:#17202a; --sunk:#1f2a35; --line:#2e3b48;
+  --ink:#e6ebf0; --muted:#97a4b1; --accent:#f2b630; --accent-ink:#1b1400;
+  --blue:#6aa8e0; --ok:#4cc382; --warn:#f0954a; --bad:#ff8a80; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+img{max-width:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 var(--body);padding-inline:16px;padding-block:0 40px}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);margin-inline:-16px;padding:10px 16px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.brand{font-family:var(--display);font-weight:700;font-size:22px;letter-spacing:.02em;text-transform:uppercase;display:flex;align-items:center;gap:8px}
+.brand .site{background:var(--ink);color:var(--bg);padding:1px 7px;border-radius:3px;font-size:16px}
+.tabs{display:flex;gap:4px;margin-left:auto;background:var(--sunk);padding:3px;border-radius:8px}
+.tabs button{border:0;background:transparent;padding:7px 12px;border-radius:6px;font-weight:600;cursor:pointer;color:var(--muted)}
+.tabs button[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.12)}
+.notice{margin-top:12px;padding:10px 12px;border:1px solid var(--line);border-left:4px solid var(--warn);background:var(--surface);border-radius:6px;font-size:14px}
+/* capture */
+.cap{max-width:520px;margin:14px auto 0;display:grid;gap:14px}
+.lbl{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:6px}
+.lbl small{text-transform:none;letter-spacing:0;font-weight:400}
+.seg{display:grid;grid-template-columns:repeat(auto-fit,minmax(88px,1fr));gap:6px}
+.seg button{min-height:46px;border:1.5px solid var(--line);background:var(--surface);border-radius:8px;font-weight:600;cursor:pointer;padding:4px 6px;line-height:1.15}
+.seg button small{display:block;font-weight:400;font-size:11px;color:var(--muted)}
+.seg button[aria-pressed="true"]{border-color:var(--ink);background:var(--ink);color:var(--bg)}
+.seg button[aria-pressed="true"] small{color:inherit;opacity:.75}
+.row{display:grid;grid-template-columns:110px 1fr;gap:6px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+input[type=text],select,textarea{width:100%;min-height:46px;border:1.5px solid var(--line);background:var(--surface);border-radius:8px;padding:8px 10px}
+textarea{min-height:64px;resize:vertical}
+#ref{font-family:var(--mono);font-size:18px;letter-spacing:.03em}
+#ref:focus{border-color:var(--accent)}
+.hint{font-size:12px;color:var(--muted);margin-top:4px}
+.shoot{display:flex;align-items:center;justify-content:center;gap:10px;min-height:64px;border:2px dashed var(--ink);border-radius:10px;background:var(--surface);font-family:var(--display);font-size:22px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;cursor:pointer}
+.shoot svg{width:28px;height:28px}
+.thumbs{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:6px;margin-top:8px}
+.thumbs figure{margin:0;position:relative;aspect-ratio:1;border-radius:6px;overflow:hidden;background:var(--sunk)}
+.thumbs img{width:100%;height:100%;object-fit:cover;display:block}
+.thumbs button{position:absolute;top:3px;right:3px;width:28px;height:28px;border-radius:50%;border:0;background:rgba(0,0,0,.65);color:#fff;font-weight:700;cursor:pointer}
+.save{min-height:58px;border:0;border-radius:10px;background:var(--accent);color:var(--accent-ink);font-family:var(--display);font-size:24px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;cursor:pointer}
+.save:disabled{opacity:.45;cursor:not-allowed}
+.status{min-height:22px;font-weight:600;font-size:14px}
+.status.ok{color:var(--ok)} .status.bad{color:var(--bad)} .status.busy{color:var(--muted)}
+/* log */
+.log{max-width:1180px;margin:14px auto 0;display:grid;gap:14px}
+.filters{display:flex;flex-wrap:wrap;gap:8px;align-items:end}
+.filters > div{display:grid;gap:4px;min-width:0}
+.filters select,.filters input{min-height:40px;padding:6px 8px}
+.filters .grow{flex:1 1 200px}
+.btn{min-height:40px;border:1.5px solid var(--line);background:var(--surface);border-radius:8px;padding:6px 12px;font-weight:600;cursor:pointer}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.kpi{background:var(--surface);padding:10px 14px}
+.kpi b{display:block;font-family:var(--display);font-size:32px;line-height:1.1;font-variant-numeric:tabular-nums}
+.kpi span{font-size:12px;color:var(--muted)}
+.list{display:grid;gap:8px}
+.item{display:grid;grid-template-columns:6px 1fr auto;background:var(--surface);border:1px solid var(--line);border-radius:8px;overflow:hidden;cursor:pointer;text-align:left;padding:0;width:100%}
+.item:hover{border-color:var(--muted)}
+.stripe{background:var(--line)}
+.stripe.ev-damage,.stripe.ev-claim{background:var(--bad)}
+.stripe.ev-receiving{background:var(--blue)} .stripe.ev-loading{background:var(--ok)} .stripe.ev-other{background:var(--muted)}
+.meta{padding:10px 12px;min-width:0;display:grid;gap:3px}
+.meta .ref{font-family:var(--mono);font-size:16px;overflow-wrap:anywhere}
+.meta .sub{font-size:13px;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:4px}
+.chip{font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;padding:2px 7px;border-radius:999px;background:var(--sunk);color:var(--ink)}
+.chip.bad{background:color-mix(in srgb,var(--bad) 18%,transparent);color:var(--bad)}
+.strip{display:flex;gap:4px;padding:8px;align-items:center}
+.strip img{width:64px;height:64px;object-fit:cover;border-radius:5px;background:var(--sunk)}
+.strip .more{font-size:12px;color:var(--muted);padding:0 4px}
+.empty{background:var(--surface);border:1.5px dashed var(--line);border-radius:10px;padding:28px 20px;text-align:center;color:var(--muted)}
+.empty h3{font-family:var(--display);font-size:24px;color:var(--ink);margin:0 0 6px;text-transform:uppercase}
+@media (max-width:620px){.item{grid-template-columns:6px 1fr}.strip{grid-column:2;padding-top:0}.strip img{width:52px;height:52px}}
+/* drawer */
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:20;display:flex;justify-content:flex-end}
+.drawer{background:var(--bg);width:min(640px,100%);height:100%;overflow:auto;padding:16px;padding-top:calc(16px + env(safe-area-inset-top,0px));display:grid;gap:12px;align-content:start}
+.drawer h2{font-family:var(--mono);font-size:20px;margin:0;overflow-wrap:anywhere}
+.dl{display:grid;grid-template-columns:max-content 1fr;gap:4px 14px;font-size:14px;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+.dl dt{color:var(--muted)} .dl dd{margin:0;min-width:0;overflow-wrap:anywhere}
+.photos{display:grid;gap:8px}
+.photos img{width:100%;border-radius:8px;background:var(--sunk)}
+.drow{display:flex;gap:8px;flex-wrap:wrap}
+.danger{color:var(--bad);border-color:color-mix(in srgb,var(--bad) 40%,var(--line))}
+@media (prefers-reduced-motion:no-preference){.save,.btn,.item{transition:border-color .15s,transform .1s}.save:active{transform:scale(.98)}}
+.gate{position:fixed;inset:0;z-index:50;background:var(--bg);display:grid;place-items:center;padding:16px}
+.gatebox{width:min(360px,100%);display:grid;gap:12px}
+#pin,.pinfield{width:100%;min-height:56px;font:600 28px var(--mono);letter-spacing:.3em;text-align:center;border:1.5px solid var(--line);border-radius:8px;background:var(--surface)}
+.addrow{display:flex;gap:8px;flex-wrap:wrap}
+.addrow input{flex:1 1 200px;min-height:44px;border:1.5px solid var(--line);background:var(--surface);border-radius:8px;padding:8px 10px}
+.acclist{display:grid;gap:6px}
+.accrow{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+.accrow span{font-weight:600;min-width:0;overflow-wrap:anywhere}
+.accrow small{color:var(--muted);font-variant-numeric:tabular-nums}
+.accrow.off span{color:var(--muted);text-decoration:line-through}
+.viewbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.vtoggle{display:inline-flex;gap:4px;background:var(--sunk);padding:3px;border-radius:8px}
+.vtoggle button{border:0;background:transparent;padding:7px 12px;border-radius:6px;font-weight:600;cursor:pointer;color:var(--muted)}
+.vtoggle button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.12)}
+.crumb{display:flex;align-items:center;gap:10px;font-family:var(--display);font-size:22px;text-transform:uppercase}
+.folders{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px}
+.folder{position:relative;display:grid;gap:4px;align-content:start;text-align:left;background:var(--surface);border:1.5px solid var(--line);border-radius:4px 10px 10px 10px;padding:28px 12px 12px;cursor:pointer;min-width:0}
+.folder:hover{border-color:var(--ink)}
+.folder .ftab{position:absolute;top:-1.5px;left:-1.5px;width:46%;height:12px;background:var(--accent);border-radius:4px 8px 0 0}
+.folder.none .ftab{background:var(--muted)}
+.fthumb{position:absolute;top:10px;right:10px;width:44px;height:44px;object-fit:cover;border-radius:6px;background:var(--sunk)}
+.crumb{flex-wrap:wrap}
+.refdl{background:var(--surface);border:1.5px solid var(--ink);border-radius:10px;padding:12px;display:grid;gap:6px}
+.refrow{display:flex;gap:8px;flex-wrap:wrap}
+.refrow input{flex:1 1 220px;min-width:0;min-height:46px;border:1.5px solid var(--line);background:var(--surface);border-radius:8px;padding:8px 10px;font:500 17px var(--mono);letter-spacing:.03em}
+.refrow .btn{min-height:46px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn.zip{border-color:var(--ink)}
+.crumb .btn{font:600 14px var(--body);text-transform:none}
+.fname{font-family:var(--display);font-weight:700;font-size:26px;line-height:1;text-transform:uppercase;padding-right:50px}
+.fmeta{font-size:13px;font-variant-numeric:tabular-nums}
+.fwhen{font-size:12px;color:var(--muted)}
+.tabs{display:none}
+.mode-tag{font:600 12px var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:3px 10px}
+#lockBtn{margin-left:auto;min-height:34px;padding:4px 12px}
+body[data-mode="driver"] .adm,body[data-mode="admin"] .drv{display:none!important}
+body[data-mode="driver"] #view-log{display:none!important}
+body[data-mode="admin"] #view-cap{display:none!important}
+</style>
+</head>
+<body data-mode="driver">
+<div class="gate" id="gate" hidden>
+  <form class="gatebox" id="pinForm" autocomplete="off">
+    <div class="brand"><span class="site">ING-4</span> Photo Log</div>
+    <label class="lbl" for="pin" id="pinLbl">Building PIN / PIN del edificio</label>
+    <input type="password" id="pin" inputmode="numeric" maxlength="8">
+    <div class="status bad" id="pinErr" hidden>Wrong PIN. / PIN incorrecto.</div>
+    <button class="save" type="submit">Enter / Entrar</button>
+  </form>
+</div>
+<header class="bar">
+  <div class="brand"><span class="site">ING-4</span> Photo Log</div>
+  <span class="mode-tag drv">Driver</span><span class="mode-tag adm">Office / Oficina</span>
+  <button type="button" class="btn adm" id="lockBtn">Lock / Bloquear</button>
+  <nav class="tabs" role="tablist">
+    <button id="tab-cap" role="tab" aria-selected="true" data-view="cap">Capture / Captura</button>
+    <button id="tab-log" role="tab" aria-selected="false" data-view="log">Log / Registro</button>
+  </nav>
+</header>
+
+<div id="offline" class="notice" hidden>No connection to the server. Check Wi-Fi. / Sin conexión al servidor. Revisa el Wi-Fi.</div>
+<div id="noconfig" class="notice" hidden>Firebase is not configured yet: paste your firebaseConfig at the top of the script. / Falta configurar Firebase.</div>
+
+<!-- CAPTURE -->
+<main id="view-cap" class="cap">
+  <div>
+    <span class="lbl">Account / Cuenta</span>
+    <div class="seg" id="acct" data-field="account"></div>
+  </div>
+  <div>
+    <span class="lbl">Event / Evento</span>
+    <div class="seg" id="evt" data-field="event">
+      <button type="button" data-v="receiving" aria-pressed="false">Receiving<small>Recibo</small></button>
+      <button type="button" data-v="loading" aria-pressed="false">Loading<small>Carga</small></button>
+      <button type="button" data-v="damage" aria-pressed="false">Damage<small>Daño</small></button>
+      <button type="button" data-v="claim" aria-pressed="false">Quality / Claim<small>Calidad</small></button>
+      <button type="button" data-v="other" aria-pressed="false">Other<small>Otro</small></button>
+    </div>
+  </div>
+  <div>
+    <label class="lbl" for="ref">Reference / Referencia <small>— scan or type / escanea o escribe</small></label>
+    <div class="row">
+      <select id="refType" aria-label="Reference type">
+        <option>PO</option><option>BOL</option><option>Order</option><option>LPN</option><option>Load #</option>
+      </select>
+      <input type="text" id="ref" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="Scan barcode…">
+    </div>
+    <div class="hint">Pull the scanner trigger with this field selected. / Con el campo seleccionado, presiona el gatillo.</div>
+  </div>
+  <div class="row2">
+    <div><label class="lbl" for="door">Door / Puerta</label><input type="text" id="door" inputmode="numeric" autocomplete="off" placeholder="e.g. 12" list="doorList"><datalist id="doorList"></datalist></div>
+    <div><label class="lbl" for="trailer">Trailer #</label><input type="text" id="trailer" autocomplete="off" autocapitalize="characters"></div>
+  </div>
+  <div>
+    <span class="lbl">Photos / Fotos <small id="pcount"></small></span>
+    <label class="shoot" for="cam">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>
+      Take photo / Tomar foto
+    </label>
+    <input type="file" id="cam" accept="image/*" capture="environment" hidden>
+    <div class="thumbs" id="thumbs"></div>
+  </div>
+  <div>
+    <label class="lbl" for="notes">Notes / Notas</label>
+    <textarea id="notes" placeholder="Seal #, pallet count, what's damaged… / Sello, # pallets, qué está dañado…"></textarea>
+  </div>
+  <div>
+    <label class="lbl" for="who">Captured by / Capturado por</label>
+    <input type="text" id="who" autocomplete="off" placeholder="Name / Nombre">
+  </div>
+  <button class="save" id="save" disabled>Save / Guardar</button>
+  <div class="status" id="status" role="status" aria-live="polite"></div>
+</main>
+
+<!-- LOG -->
+<main id="view-log" class="log" hidden>
+  <div class="refdl">
+    <label class="lbl" for="refDl">Download photos by reference / Descargar fotos por referencia</label>
+    <div class="refrow">
+      <input type="text" id="refDl" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="PO, BOL, Order, LPN, Load #">
+      <button type="button" class="btn zip" id="refDlBtn" disabled>Download (ZIP)</button>
+    </div>
+    <div class="hint" id="refDlHint"></div>
+  </div>
+  <div class="filters">
+    <div class="grow"><label class="lbl" for="q">Search reference / Buscar</label><input type="text" id="q" placeholder="PO, BOL, trailer, door…"></div>
+    <div><label class="lbl" for="fAcct">Account</label><select id="fAcct"><option value="">All</option></select></div>
+    <div><label class="lbl" for="fEvt">Event</label><select id="fEvt"><option value="">All</option><option value="receiving">Receiving</option><option value="loading">Loading</option><option value="damage">Damage</option><option value="claim">Quality / Claim</option><option value="other">Other</option></select></div>
+    <div><label class="lbl" for="fDays">Period</label><select id="fDays"><option value="1">Today</option><option value="7" selected>Last 7 days</option><option value="30">Last 30 days</option><option value="0">All</option></select></div>
+    <button class="btn" id="csv" hidden>Export CSV</button>
+    <button class="btn" id="manage">Clients / Clientes</button>
+  </div>
+  <div class="viewbar">
+    <div class="vtoggle" id="lview" role="group" aria-label="Log view">
+      <button type="button" data-lv="doors" aria-pressed="true">Doors / Puertas</button>
+      <button type="button" data-lv="list" aria-pressed="false">List / Lista</button>
+    </div>
+    <div class="crumb" id="crumb" hidden><button type="button" class="btn" id="crumbBack">← All doors</button><b id="crumbName"></b></div>
+  </div>
+  <div class="kpis" id="kpis"></div>
+  <div class="list" id="list"></div>
+</main>
+
+<div class="scrim" id="scrim" hidden><aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-label="Capture detail"></aside></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script>
+/* ================== CONFIG ==================
+   Paste the same firebaseConfig you use in roadtex-dock
+   (Firebase console > Project settings > Your apps).            */
+const firebaseConfig = {
+  apiKey: "AIzaSyAvLeern9DWznfuIK63ISauHSZFdI8pti0",
+  authDomain: "roadtex-photolog.firebaseapp.com",
+  databaseURL: "https://roadtex-photolog-default-rtdb.firebaseio.com",
+  projectId: "roadtex-photolog",
+  storageBucket: "roadtex-photolog.firebasestorage.app",
+  messagingSenderId: "561836084136",
+  appId: "1:561836084136:web:37bf8fb3ff5f9f8673eb9d"
+};
+const ROOT = "photoLog/ING4";   // own branch, does not touch dock data
+const SITE_PIN = "0000";         // CHANGE: building PIN, asked once per device
+const ADMIN_PIN = "9999";        // CHANGE: PIN to add / hide clients
+const DEFAULT_ACCOUNTS = ["PIM", "LMNT", "Carley's", "Hippeas"];   // first-run list
+/* ============================================ */
+
+(() => {
+const $ = s => document.querySelector(s);
+const EV = {receiving:"Receiving / Recibo",loading:"Loading / Carga",damage:"Damage / Daño",claim:"Quality / Claim",other:"Other / Otro"};
+const state = {account:"", event:"", photos:[], rows:[], busy:false, accounts:[]};
+const normDoor = v => { let d = String(v||"").trim().toUpperCase().replace(/^(DOOR|DR|PUERTA)\s*#?/,"").replace(/\s+/g,""); if (/^\d+$/.test(d)) d = String(parseInt(d,10)); return d; };
+const NO_DOOR = "__none__";
+const normRef = v => String(v||"").trim().toUpperCase();
+const capsForRef = ref => state.rows.filter(r => normRef(r.ref) === ref);
+
+const doorKey = r => normDoor(r.door) || NO_DOOR;
+state.logView = (()=>{ try { return localStorage.getItem("ing4-logview") || "doors"; } catch(e){ return "doors"; } })();
+state.door = null;   // open folder
+const slug = n => n.trim().toUpperCase().replace(/[^A-Z0-9]+/g,"_").replace(/^_|_$/g,"").slice(0,40);
+state.accounts = DEFAULT_ACCOUNTS.map((n,i)=>({id:slug(n), name:n, active:true, order:i}));
+const ls = {get(k){try{return localStorage.getItem(k)}catch(e){return null}}, set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+let db = null;
+
+/* ---------- mode: driver page (index.html) vs office page (admin.html) ---------- */
+const MODE = document.body.dataset.mode === "admin" ? "admin" : "driver";
+const GATE_PIN = MODE === "admin" ? ADMIN_PIN : SITE_PIN;
+const GATE_KEY = MODE === "admin" ? "ing4-admin-ok" : "ing4-pin-ok";
+if (MODE === "admin") {
+  $("#pinLbl").textContent = "Admin PIN / PIN de administrador";
+  $("#lockBtn").onclick = () => { try { localStorage.removeItem(GATE_KEY); } catch(e){} location.reload(); };
+}
+
+/* ---------- PIN gate (once per device) ---------- */
+const gate = $("#gate");
+if (ls.get(GATE_KEY) !== GATE_PIN) {
+  gate.hidden = false; setTimeout(() => $("#pin").focus(), 50);
+  $("#pinForm").addEventListener("submit", e => {
+    e.preventDefault();
+    if ($("#pin").value.trim() === GATE_PIN) { ls.set(GATE_KEY, GATE_PIN); gate.hidden = true; }
+    else { $("#pinErr").hidden = false; $("#pin").value = ""; $("#pin").focus(); }
+  });
+}
+
+/* ---------- Firebase ---------- */
+const configured = !Object.values(firebaseConfig).some(v => String(v).includes("PASTE_HERE"));
+if (!configured) { $("#noconfig").hidden = false; }
+else {
+  try {
+    const app = firebase.apps.length ? firebase.app() : firebase.initializeApp(firebaseConfig);
+    db = app.database();
+    const accRef = db.ref(ROOT + "/config/accounts");
+    accRef.on("value", snap => {
+      const v = snap.val();
+      if (!v) {   // first run: store the default list once
+        const seed = {};
+        state.accounts.forEach(a => { seed[a.id] = {name:a.name, active:true, order:a.order, addedTs:Date.now()}; });
+        accRef.update(seed).catch(()=>{});
+        return;
+      }
+      state.accounts = Object.entries(v).map(([id,a]) => ({id, ...a})).sort((a,b)=>(a.order??99)-(b.order??99) || a.name.localeCompare(b.name));
+      renderAccounts(); renderLog();
+      if (!$("#scrim").hidden && $("#drawer").dataset.mode === "clients") renderClients();
+    });
+    db.ref(".info/connected").on("value", s => { $("#offline").hidden = !!s.val(); });
+    if (MODE === "admin") db.ref(ROOT + "/captures").orderByChild("tsMs").limitToLast(1000).on("value", snap => {
+      const rows = [];
+      snap.forEach(c => { rows.push({id:c.key, ...c.val()}); });
+      state.rows = rows.sort((a,b) => b.tsMs - a.tsMs);
+      renderLog();
+    }, () => { $("#offline").hidden = false; });
+  } catch (e) { $("#noconfig").hidden = false; }
+}
+
+/* ---------- tabs ---------- */
+function show(v){
+  for (const b of document.querySelectorAll(".tabs button")) b.setAttribute("aria-selected", b.dataset.view===v);
+  $("#view-cap").hidden = v!=="cap"; $("#view-log").hidden = v!=="log";
+  ls.set("ing4-view", v);
+}
+document.querySelectorAll(".tabs button").forEach(b => b.onclick = () => show(b.dataset.view));
+show(MODE === "admin" ? "log" : "cap");
+
+/* ---------- capture form ---------- */
+for (const seg of document.querySelectorAll(".seg")) {
+  seg.addEventListener("click", e => {
+    const b = e.target.closest("button"); if(!b) return;
+    seg.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x===b));
+    state[seg.dataset.field] = b.dataset.v;
+    if (seg.dataset.field==="account") ls.set("ing4-acct", b.dataset.v);
+    validate();
+  });
+}
+/* clients: capture buttons + log filter come from the list */
+function renderAccounts(){
+  const active = state.accounts.filter(a => a.active !== false);
+  const box = $("#acct"); box.textContent = "";
+  if (!active.some(a => a.name === state.account)) state.account = "";
+  if (!state.account) { const saved = ls.get("ing4-acct"); if (active.some(a=>a.name===saved)) state.account = saved; }
+  active.forEach(a => {
+    const b = document.createElement("button"); b.type = "button"; b.dataset.v = a.name; b.textContent = a.name;
+    b.setAttribute("aria-pressed", a.name === state.account); box.append(b);
+  });
+  const f = $("#fAcct"), keep = f.value; f.textContent = "";
+  const all = document.createElement("option"); all.value = ""; all.textContent = "All"; f.append(all);
+  const names = new Set(state.accounts.map(a=>a.name)); state.rows.forEach(r => r.account && names.add(r.account));
+  [...names].forEach(n => { const o = document.createElement("option"); o.value = n; o.textContent = n; f.append(o); });
+  f.value = names.has(keep) ? keep : "";
+  validate();
+}
+
+/* manage clients (admin PIN) */
+let adminOk = MODE === "admin", accMsg = {c:"", t:""};
+const say = (c,t) => { accMsg = {c,t}; const m = $("#accMsg"); if (m) { m.className = "status "+c; m.textContent = t; } };
+$("#manage").addEventListener("click", () => { accMsg = {c:"",t:""}; $("#drawer").dataset.mode = "clients"; renderClients(); $("#scrim").hidden = false; });
+function renderClients(){
+  const d = $("#drawer"); d.textContent = "";
+  const top = document.createElement("div"); top.className = "drow"; top.style.cssText = "justify-content:space-between;align-items:center";
+  const h = document.createElement("h2"); h.textContent = "Clients / Clientes"; h.style.fontFamily = "var(--display)";
+  const x = document.createElement("button"); x.className = "btn"; x.textContent = "Close"; x.onclick = closeDetail;
+  top.append(h, x); d.append(top);
+  if (!adminOk) {
+    const f = document.createElement("form"); f.className = "gatebox"; f.style.width = "100%";
+    f.innerHTML = '<label class="lbl" for="apin">Admin PIN</label><input type="password" id="apin" inputmode="numeric" maxlength="8" class="pinfield"><div class="status bad" id="apinErr" hidden>Wrong PIN. / PIN incorrecto.</div><button class="save" type="submit">Unlock / Desbloquear</button>';
+    f.onsubmit = e => { e.preventDefault(); if ($("#apin").value.trim() === ADMIN_PIN) { adminOk = true; renderClients(); } else { $("#apinErr").hidden = false; $("#apin").value = ""; } };
+    d.append(f); setTimeout(()=>$("#apin") && $("#apin").focus(), 50); return;
+  }
+  const add = document.createElement("form"); add.className = "addrow";
+  add.innerHTML = '<input type="text" id="newAcct" maxlength="30" placeholder="New client name / Nombre del cliente" autocomplete="off"><button class="btn" type="submit">Add / Agregar</button>';
+  const msg = document.createElement("div"); msg.className = "status "+accMsg.c; msg.id = "accMsg"; msg.textContent = accMsg.t;
+  add.onsubmit = async e => {
+    e.preventDefault();
+    const name = $("#newAcct").value.trim().replace(/\s+/g," "), id = slug(name);
+    if (!id) return;
+    const ex = state.accounts.find(a => a.id === id || a.name.toLowerCase() === name.toLowerCase());
+    if (ex) { say("bad", ex.active === false ? `${ex.name} exists but is hidden — tap Show. / Ya existe, está oculto.` : `${ex.name} already exists. / Ya existe.`); return; }
+    try {
+      await db.ref(`${ROOT}/config/accounts/${id}`).set({name, active:true, order:state.accounts.length, addedTs:Date.now()});
+      say("ok", `${name} added. Scanners show it right away. / Agregado.`);
+    } catch(err) { say("bad", "Not saved — check connection. / No se guardó."); }
+  };
+  const list = document.createElement("div"); list.className = "acclist";
+  state.accounts.forEach(a => {
+    const row = document.createElement("div"); row.className = "accrow" + (a.active === false ? " off" : "");
+    const n = document.createElement("span"); n.textContent = a.name;
+    const cnt = state.rows.filter(r => r.account === a.name).length;
+    const c = document.createElement("small"); c.textContent = `${cnt} capture${cnt===1?"":"s"}`;
+    const t = document.createElement("button"); t.className = "btn"; t.type = "button";
+    t.textContent = a.active === false ? "Show / Mostrar" : "Hide / Ocultar";
+    t.onclick = () => db.ref(`${ROOT}/config/accounts/${a.id}/active`).set(a.active === false).catch(()=>say("bad","Not saved. / No se guardó."));
+    row.append(n, c, t); list.append(row);
+  });
+  const note = document.createElement("p"); note.className = "hint";
+  note.textContent = "Hidden clients disappear from the capture screen but keep their history in the log. Names cannot be renamed or deleted so past evidence stays linked. / Los clientes ocultos no aparecen al capturar pero conservan su historial.";
+  d.append(add, msg, list, note);
+}
+$("#who").value = ls.get("ing4-who") || "";
+$("#who").addEventListener("change", e => ls.set("ing4-who", e.target.value.trim()));
+$("#ref").addEventListener("keydown", e => { if (e.key==="Enter"){ e.preventDefault(); $("#door").focus(); } });
+["#ref","#who"].forEach(s => $(s).addEventListener("input", validate));
+
+$("#cam").addEventListener("change", async e => {
+  const f = e.target.files && e.target.files[0]; e.target.value = "";
+  if (!f) return;
+  setStatus("Processing photo… / Procesando…","busy");
+  try {
+    const full = await toJpeg(f, 1280, .7, true);
+    const thumb = await toJpeg(f, 240, .6, false);
+    state.photos.push({full, thumb}); renderThumbs(); setStatus("","");
+  } catch(err){ setStatus("Could not read that photo. Try again. / No se pudo leer la foto.","bad"); }
+  validate();
+});
+
+/* returns a JPEG data URL; stamp = burn date/site/ref into the image */
+function toJpeg(file, max, q, stamp){
+  return new Promise((res,rej) => {
+    const img = new Image(), u = URL.createObjectURL(file);
+    img.onload = () => {
+      const s = Math.min(1, max/Math.max(img.width,img.height));
+      const c = document.createElement("canvas"); c.width = Math.round(img.width*s); c.height = Math.round(img.height*s);
+      const x = c.getContext("2d"); x.drawImage(img,0,0,c.width,c.height);
+      if (stamp) {
+        const t = `${new Date().toLocaleString()}  ING-4  ${state.account||""}  ${$("#refType").value} ${$("#ref").value.trim().toUpperCase()}`;
+        const h = Math.max(16, Math.round(c.width/45)); x.font = `600 ${h}px sans-serif`;
+        x.fillStyle = "rgba(0,0,0,.55)"; x.fillRect(0, c.height-h*1.6, c.width, h*1.6);
+        x.fillStyle = "#fff"; x.fillText(t, h*.5, c.height-h*.5);
+      }
+      URL.revokeObjectURL(u);
+      res(c.toDataURL("image/jpeg", q));
+    };
+    img.onerror = () => { URL.revokeObjectURL(u); rej(new Error("load")); };
+    img.src = u;
+  });
+}
+function renderThumbs(){
+  const t = $("#thumbs"); t.textContent = "";
+  state.photos.forEach((p,i) => {
+    const f = document.createElement("figure"), im = document.createElement("img"), x = document.createElement("button");
+    im.src = p.thumb; im.alt = `Photo ${i+1}`; x.textContent = "×"; x.setAttribute("aria-label", `Remove photo ${i+1}`);
+    x.onclick = () => { state.photos.splice(i,1); renderThumbs(); validate(); };
+    f.append(im,x); t.append(f);
+  });
+  $("#pcount").textContent = state.photos.length ? `— ${state.photos.length}` : "";
+}
+function validate(){
+  const ok = !state.busy && db && state.account && state.event && $("#ref").value.trim() && state.photos.length && $("#who").value.trim();
+  $("#save").disabled = !ok;
+}
+function setStatus(t,c){ const s=$("#status"); s.textContent=t; s.className="status "+(c||""); }
+const withTimeout = (p, ms) => Promise.race([p, new Promise((_,r)=>setTimeout(()=>r(new Error("timeout")), ms))]);
+
+$("#save").addEventListener("click", async () => {
+  if ($("#save").disabled) return;
+  state.busy = true; validate();
+  try {
+    const capRef = db.ref(ROOT + "/captures").push();
+    const id = capRef.key, now = new Date(), updates = {};
+    state.photos.forEach((p,i) => { updates[`${ROOT}/photos/${id}/${i}`] = p.full; });
+    updates[`${ROOT}/captures/${id}`] = {
+      building:"ING-4", account:state.account, event:state.event,
+      refType:$("#refType").value, ref:$("#ref").value.trim().toUpperCase(),
+      door:normDoor($("#door").value), trailer:$("#trailer").value.trim().toUpperCase(),
+      notes:$("#notes").value.trim(), capturedBy:$("#who").value.trim(),
+      photoCount:state.photos.length, thumbs:state.photos.map(p=>p.thumb),
+      tsMs:now.getTime(), ts:now.toISOString()
+    };
+    setStatus(`Uploading ${state.photos.length} photo(s)… / Subiendo…`,"busy");
+    await withTimeout(db.ref().update(updates), 45000);   // one atomic write
+    ls.set("ing4-who", $("#who").value.trim());
+    const n = state.photos.length;
+    state.photos = []; renderThumbs();
+    ["#ref","#door","#trailer","#notes"].forEach(s => $(s).value = "");
+    $("#evt").querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed","false")); state.event = "";
+    setStatus(`Saved — ${n} photo(s) logged. / Guardado.`,"ok");
+    $("#ref").focus();
+  } catch(err) {
+    setStatus(err && err.message==="timeout"
+      ? "No confirmation from server — check Wi-Fi and press Save again. Photos are kept. / Revisa Wi-Fi y vuelve a guardar."
+      : "Not saved: " + (err && err.code || err.message) + ". Photos are kept. / No se guardó.","bad");
+  } finally { state.busy = false; validate(); }
+});
+
+/* ---------- log ---------- */
+["#q","#fAcct","#fEvt","#fDays"].forEach(s => $(s).addEventListener("input", renderLog));
+function filtered(){
+  const q=$("#q").value.trim().toUpperCase(), a=$("#fAcct").value, ev=$("#fEvt").value, d=+$("#fDays").value;
+  let from=0; if(d){ const t=new Date(); t.setHours(0,0,0,0); from=t.getTime()-(d-1)*864e5; }
+  return state.rows.filter(r => (state.door===null || doorKey(r)===state.door) && (!a||r.account===a) && (!ev||r.event===ev) && (!from||r.tsMs>=from) &&
+    (!q || [r.ref,r.trailer,r.door,r.notes,r.capturedBy].join(" ").toUpperCase().includes(q)));
+}
+const fmt = ms => new Date(ms).toLocaleString([], {month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"});
+function renderLog(){
+  const rows = filtered();
+  const photos = rows.reduce((s,r)=>s+(r.photoCount||0),0);
+  const issues = rows.filter(r=>r.event==="damage"||r.event==="claim").length;
+  const refs = new Set(rows.map(r=>r.refType+":"+r.ref)).size;
+  const k = $("#kpis"); k.textContent = "";
+  [[rows.length,"Captures / Capturas"],[photos,"Photos / Fotos"],[refs,"References / Referencias"],[issues,"Damage + claims / Daños"]]
+    .forEach(([n,l]) => { const d=document.createElement("div"); d.className="kpi"; const b=document.createElement("b"); b.textContent=n; const s=document.createElement("span"); s.textContent=l; d.append(b,s); k.append(d); });
+  renderDoorList();
+  document.querySelectorAll("#lview button").forEach(b => b.setAttribute("aria-pressed", b.dataset.lv === state.logView));
+  const cr = $("#crumb"); cr.hidden = state.door === null;
+  if (state.door !== null) $("#crumbName").textContent = state.door === NO_DOOR ? "No door / Sin puerta" : "Door " + state.door;
+  refHint();
+  const L = $("#list"); L.textContent = "";
+  if (rows.length && state.logView === "doors" && state.door === null) { renderFolders(rows, L); return; }
+  if (!rows.length) {
+    const e = document.createElement("div"); e.className = "empty";
+    e.innerHTML = state.rows.length
+      ? "<h3>No matches</h3>Change the filters or search. / Cambia los filtros."
+      : "<h3>No captures yet</h3>Photos taken from the scanners appear here with their PO / BOL, door and time.<br>Open <b>Capture</b> on a scanner to log the first one. / Las fotos de los scanners aparecerán aquí.";
+    L.append(e); return;
+  }
+  for (const r of rows) {
+    const it=document.createElement("button"); it.className="item"; it.type="button";
+    const st=document.createElement("span"); st.className="stripe ev-"+r.event;
+    const m=document.createElement("div"); m.className="meta";
+    const ref=document.createElement("div"); ref.className="ref"; ref.textContent=`${r.refType} ${r.ref}`;
+    const ch=document.createElement("div"); ch.className="chips";
+    [[r.account,""],[EV[r.event]||r.event,(r.event==="damage"||r.event==="claim")?"bad":""]].forEach(([t,c])=>{ const s=document.createElement("span"); s.className="chip "+c; s.textContent=t; ch.append(s); });
+    const sub=document.createElement("div"); sub.className="sub";
+    sub.textContent=[fmt(r.tsMs), r.door&&("Door "+r.door), r.trailer&&("Trl "+r.trailer), r.capturedBy].filter(Boolean).join(" · ");
+    m.append(ref,ch,sub);
+    const strip=document.createElement("div"); strip.className="strip";
+    (r.thumbs||[]).slice(0,3).forEach(src=>{ const i=document.createElement("img"); i.alt=""; i.src=src; strip.append(i); });
+    if ((r.photoCount||0)>3){ const s=document.createElement("span"); s.className="more"; s.textContent="+"+(r.photoCount-3); strip.append(s); }
+    it.append(st,m,strip); it.onclick=()=>openDetail(r); L.append(it);
+  }
+}
+function renderFolders(rows, L){
+  const g = new Map();
+  rows.forEach(r => { const k = doorKey(r); if (!g.has(k)) g.set(k, []); g.get(k).push(r); });
+  const keys = [...g.keys()].sort((a,b) => {
+    if (a===NO_DOOR) return 1; if (b===NO_DOOR) return -1;
+    const na = +a, nb = +b; return (isNaN(na)||isNaN(nb)) ? a.localeCompare(b) : na - nb;
+  });
+  const grid = document.createElement("div"); grid.className = "folders";
+  keys.forEach(k => {
+    const list = g.get(k), last = list.reduce((m,r)=>Math.max(m,r.tsMs),0);
+    const ph = list.reduce((s,r)=>s+(r.photoCount||0),0);
+    const issues = list.filter(r=>r.event==="damage"||r.event==="claim").length;
+    const accts = [...new Set(list.map(r=>r.account))];
+    const b = document.createElement("button"); b.type = "button"; b.className = "folder" + (k===NO_DOOR ? " none" : "");
+    const tab = document.createElement("span"); tab.className = "ftab";
+    const name = document.createElement("div"); name.className = "fname"; name.textContent = k===NO_DOOR ? "No door" : "Door " + k;
+    const meta = document.createElement("div"); meta.className = "fmeta";
+    meta.textContent = `${list.length} capture${list.length===1?"":"s"} · ${ph} photo${ph===1?"":"s"}`;
+    const when = document.createElement("div"); when.className = "fwhen"; when.textContent = "Last: " + fmt(last);
+    const ch = document.createElement("div"); ch.className = "chips";
+    accts.slice(0,3).forEach(a => { const c=document.createElement("span"); c.className="chip"; c.textContent=a; ch.append(c); });
+    if (issues) { const c=document.createElement("span"); c.className="chip bad"; c.textContent=issues+" damage/claim"; ch.append(c); }
+    const th = document.createElement("img"); th.className = "fthumb"; th.alt = ""; const t0 = list[0].thumbs && list[0].thumbs[0]; if (t0) th.src = t0; else th.hidden = true;
+    b.append(tab, th, name, meta, when, ch);
+    b.onclick = () => { state.door = k; renderLog(); window.scrollTo(0,0); };
+    grid.append(b);
+  });
+  L.append(grid);
+}
+function setLogView(v){ state.logView = v; try{ localStorage.setItem("ing4-logview", v); }catch(e){} if (v==="list") state.door = null; renderLog(); }
+document.querySelectorAll("#lview button").forEach(b => b.onclick = () => setLogView(b.dataset.lv));
+$("#crumbBack").onclick = () => { state.door = null; renderLog(); };
+
+/* ---------- download whole folder as ZIP ---------- */
+function loadZipLib(){
+  if (window.JSZip) return Promise.resolve(window.JSZip);
+  return new Promise((res, rej) => {
+    const sc = document.createElement("script");
+    sc.src = "https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js";
+    sc.onload = () => window.JSZip ? res(window.JSZip) : rej(new Error("zip lib"));
+    sc.onerror = () => rej(new Error("zip lib"));
+    document.head.append(sc);
+  });
+}
+const safe = t => String(t||"").replace(/[^A-Za-z0-9#._-]+/g,"_").replace(/^_+|_+$/g,"");
+const pad = n => String(n).padStart(2,"0");
+const stamp = ms => { const d=new Date(ms); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}`; };
+async function zipCaptures(rows, label, btn){
+  const idle = btn.textContent;
+  const total = rows.reduce((s,r)=>s+(r.photoCount||0),0);
+  if (!rows.length || !db) return;
+  btn.disabled = true;
+  try {
+    btn.textContent = "Preparing… / Preparando…";
+    const JSZip = await loadZipLib();
+    const zip = new JSZip(), folder = safe(label), dir = zip.folder(folder);
+    const csv = [["Timestamp","Account","Event","RefType","Reference","Door","Trailer","CapturedBy","Photo","Notes"]];
+    let done = 0;
+    for (const r of [...rows].sort((x,y)=>x.tsMs-y.tsMs)) {
+      const snap = await db.ref(`${ROOT}/photos/${r.id}`).once("value");
+      const v = snap.val() || [];
+      (Array.isArray(v) ? v : Object.values(v)).forEach((src, i) => {
+        const door = normDoor(r.door) ? "Door" + safe(normDoor(r.door)) : "NoDoor";
+        const name = `${stamp(r.tsMs)}_${safe(r.account)}_${safe(r.event)}_${door}_${i+1}.jpg`;
+        dir.file(name, String(src).split(",")[1] || "", {base64:true});
+        csv.push([r.ts, r.account, r.event, r.refType, r.ref, r.door, r.trailer, r.capturedBy, name, r.notes]);
+        done++;
+      });
+      btn.textContent = `Photos ${done} / ${total}…`;
+    }
+    const q = v => `"${String(v??"").replace(/"/g,'""')}"`;
+    dir.file("index.csv", "\ufeff" + csv.map(row => row.map(q).join(",")).join("\r\n"));
+    btn.textContent = "Zipping… / Comprimiendo…";
+    const blob = await zip.generateAsync({type:"blob"});
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob);
+    a.download = `ING4_${folder}_${new Date().toISOString().slice(0,10)}.zip`;
+    document.body.append(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 60000);
+    btn.textContent = `Downloaded ${done} photos ✓`;
+  } catch (e) {
+    btn.textContent = "Download failed — check connection";
+  } finally {
+    btn.disabled = false;
+    setTimeout(() => { btn.textContent = idle; refHint(); }, 4000);
+  }
+}
+/* download by reference: PO / BOL / Order / LPN / Load # */
+function refHint(){
+  const ref = normRef($("#refDl").value), hint = $("#refDlHint"), btn = $("#refDlBtn");
+  if (!ref) { hint.textContent = "Scan or type a PO, BOL, Order, LPN or Load #. / Escanea o escribe la referencia."; btn.disabled = true; return; }
+  const rows = capsForRef(ref);
+  if (!rows.length) { hint.textContent = `No captures for ${ref}. / Sin capturas.`; btn.disabled = true; return; }
+  const ph = rows.reduce((s,r)=>s+(r.photoCount||0),0);
+  const types = [...new Set(rows.map(r=>r.refType))].join(" / ");
+  const doors = [...new Set(rows.map(r=>normDoor(r.door)).filter(Boolean))];
+  const accts = [...new Set(rows.map(r=>r.account))].join(", ");
+  hint.textContent = `${types} ${ref}: ${rows.length} capture${rows.length===1?"":"s"} · ${ph} photo${ph===1?"":"s"} · ${accts}` + (doors.length ? ` · Door ${doors.join(", ")}` : "");
+  if (!btn.textContent.includes("…") && !btn.textContent.includes("✓")) btn.textContent = `Download ${ph} photo${ph===1?"":"s"} (ZIP)`;
+  btn.disabled = false;
+}
+$("#refDl").addEventListener("input", refHint);
+$("#refDl").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); if (!$("#refDlBtn").disabled) $("#refDlBtn").click(); } });
+$("#refDlBtn").addEventListener("click", () => {
+  const ref = normRef($("#refDl").value), rows = capsForRef(ref);
+  zipCaptures(rows, (rows[0] ? rows[0].refType : "REF") + "-" + ref, $("#refDlBtn"));
+});
+function renderDoorList(){
+  const dl = $("#doorList"); if (!dl) return;
+  const doors = [...new Set(state.rows.map(r=>normDoor(r.door)).filter(Boolean))].sort((a,b)=>(+a)-(+b)||a.localeCompare(b));
+  dl.textContent = ""; doors.forEach(d => { const o=document.createElement("option"); o.value=d; dl.append(o); });
+}
+function summary(r){
+  return [`ING-4 photo evidence — ${r.account}`,`${r.refType}: ${r.ref}`,`Event: ${EV[r.event]||r.event}`,
+    `Date: ${new Date(r.tsMs).toLocaleString()}`, r.door&&`Door: ${r.door}`, r.trailer&&`Trailer: ${r.trailer}`,
+    `Captured by: ${r.capturedBy}`, `Photos: ${r.photoCount||0}`, r.notes&&`Notes: ${r.notes}`].filter(Boolean).join("\n");
+}
+async function openDetail(r){
+  const d=$("#drawer"); d.textContent="";
+  const top=document.createElement("div"); top.className="drow"; top.style.justifyContent="space-between"; top.style.alignItems="center";
+  const h=document.createElement("h2"); h.textContent=`${r.refType} ${r.ref}`;
+  const x=document.createElement("button"); x.className="btn"; x.textContent="Close"; x.onclick=closeDetail;
+  top.append(h,x);
+  const dl=document.createElement("dl"); dl.className="dl";
+  [["Account",r.account],["Event",EV[r.event]||r.event],["Time",new Date(r.tsMs).toLocaleString()],["Door",r.door||"—"],["Trailer",r.trailer||"—"],["Captured by",r.capturedBy],["Notes",r.notes||"—"]]
+    .forEach(([a,b])=>{ const t=document.createElement("dt"); t.textContent=a; const v=document.createElement("dd"); v.textContent=b; dl.append(t,v); });
+  const acts=document.createElement("div"); acts.className="drow";
+  const cp=document.createElement("button"); cp.className="btn"; cp.textContent="Copy summary";
+  cp.onclick=async()=>{ try{ await navigator.clipboard.writeText(summary(r)); cp.textContent="Copied"; }catch(e){ cp.textContent="Copy failed — select text below"; } };
+  const same=document.createElement("button"); same.className="btn"; same.textContent="All captures for this "+r.refType;
+  same.onclick=()=>{ state.door=null; state.logView="list"; $("#q").value=r.ref; $("#fDays").value="0"; $("#fEvt").value=""; $("#fAcct").value=""; closeDetail(); renderLog(); };
+  acts.append(cp,same);
+  const zr=document.createElement("button"); zr.className="btn"; const nRef=capsForRef(normRef(r.ref)).reduce((s,x)=>s+(x.photoCount||0),0);
+  zr.textContent=`Download ${r.refType} ${r.ref} (${nRef} photo${nRef===1?"":"s"}, ZIP)`; zr.onclick=()=>zipCaptures(capsForRef(normRef(r.ref)), r.refType+"-"+normRef(r.ref), zr); acts.append(zr);
+  if (normDoor(r.door)) { const df=document.createElement("button"); df.className="btn"; df.textContent="Door "+normDoor(r.door)+" folder"; df.onclick=()=>{ state.door=normDoor(r.door); state.logView="doors"; $("#q").value=""; closeDetail(); renderLog(); }; acts.append(df); }
+  const ph=document.createElement("div"); ph.className="photos";
+  const loading=document.createElement("div"); loading.className="hint"; loading.textContent="Loading photos… / Cargando fotos…"; ph.append(loading);
+  const pre=document.createElement("pre"); pre.style.cssText="white-space:pre-wrap;font:12px/1.4 var(--mono);color:var(--muted);margin:0"; pre.textContent=summary(r);
+  d.append(top,dl,acts,ph,pre);
+  $("#scrim").hidden=false; x.focus();
+  try {
+    const snap = await db.ref(`${ROOT}/photos/${r.id}`).once("value");
+    const list = snap.val() || [];
+    ph.textContent = "";
+    (Array.isArray(list)?list:Object.values(list)).forEach((src,i)=>{
+      const a=document.createElement("a"); a.href=src; a.download=`ING4_${r.refType}_${r.ref}_${i+1}.jpg`.replace(/[^\w.#-]+/g,"_");
+      const im=document.createElement("img"); im.src=src; im.alt=`Photo ${i+1} for ${r.ref}`; a.append(im); ph.append(a);
+    });
+    if (!ph.children.length) ph.textContent = "No photos found.";
+  } catch(e){ ph.textContent = "Could not load photos — check connection. / No se pudieron cargar."; }
+}
+function closeDetail(){ $("#scrim").hidden=true; delete $("#drawer").dataset.mode; }
+$("#scrim").addEventListener("click",e=>{ if(e.target.id==="scrim") closeDetail(); });
+document.addEventListener("keydown",e=>{ if(e.key==="Escape") closeDetail(); });
+
+$("#csv").hidden = false;
+$("#csv").addEventListener("click", () => {
+  const rows=filtered(), q=v=>`"${String(v??"").replace(/"/g,'""')}"`;
+  const head=["Timestamp","Building","Account","Event","RefType","Reference","Door","Trailer","CapturedBy","PhotoCount","CaptureId","Notes"];
+  const csv="﻿"+[head.join(",")].concat(rows.map(r=>[r.ts,r.building,r.account,r.event,r.refType,r.ref,r.door,r.trailer,r.capturedBy,r.photoCount,r.id,r.notes].map(q).join(","))).join("\r\n");
+  const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));
+  a.download=`ING4_photo_log_${new Date().toISOString().slice(0,10)}.csv`; document.body.append(a); a.click(); a.remove();
+});
+
+renderAccounts(); renderLog(); renderThumbs(); validate();
+})();
+</script>
+</body>
+</html>
